@@ -18,7 +18,8 @@ int main(int argc, char const* argv[])
         data.push_back(randomFloat);
     }
 
-    HistogramComputation computeHistograms = HistogramComputation(threadCount, binCount, minMeas, maxMeas, data);
+    HistogramComputation computeHistograms(threadCount, binCount, minMeas, maxMeas, data);
 
     return 0;
 }
+
