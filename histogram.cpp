@@ -30,7 +30,7 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
   for (float max : std::get<0>(globalOutput)) {
     std::cout << max << ", ";
   }
-  std::cout << std::endl << "bin_counts";
+  std::cout << std::endl << "bin_counts: ";
   for (int count : std::get<1>(globalOutput)) {
     std::cout << count << ", ";
   }
