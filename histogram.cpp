@@ -9,28 +9,22 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
                                            float minMeas, float maxMeas,
                                            std::vector<float> data)
     : threadCount(threadCount), binCount(binCount), minMeas(minMeas),
-      maxMeas(maxMeas), data(data) {
-
-  int dataCount = data.size();
+      maxMeas(maxMeas), data(data), dataCount(data.size()) {
 
   // "Global" global sum variables
-  std::vector<float> globalSumBinMaxes;
-  std::mutex globalSumBinCountMutex;
   for (int i = 1; i <= binCount; i++) {
     globalSumBinMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
+    globalSumBinCounts.push_back(0);
   }
-  std::vector<int> globalSumBinCounts(treeSumBinMaxes.size(), 0);
 
   // "Global" tree sum variables
-  std::vector<float> treeSumBinMaxes;
-  std::mutex treeSumBinCountMutex;
   for (int i = 1; i <= binCount; i++) {
     treeSumBinMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
+    treeSumBinCounts.push_back(0);
   }
-  std::vector<int> treeSumBinCounts(treeSumBinMaxes.size(), 0);
 
-  auto globalOutput = globalSumHistogram();
-  auto treeOutput = treeSumHistogram();
+  globalOutput = globalSumHistogram();
+  treeOutput = treeSumHistogram();
 
   std::cout << "Global Sum Histogram:" << std::endl << "bin_maxes: ";
   for (float max : std::get<0>(globalOutput)) {
@@ -65,8 +59,6 @@ HistogramComputation::globalSumHistogram() {
   std::vector<std::thread> threadVector;
 
   for (int i = 0; i < threadCount; i++) {
-    int startIndex = i * dataCount / threadCount;
-    int nextStartIndex = (i + 1) * dataCount / threadCount;
     std::thread threadi([&] {
       // Thread lambda for the global sum
       int startIndex = i * dataCount / threadCount;
@@ -111,8 +103,6 @@ HistogramComputation::treeSumHistogram() {
   std::vector<std::thread> threadVector;
 
   for (int i = 0; i < threadCount; i++) {
-    int startIndex = i * dataCount / threadCount;
-    int nextStartIndex = (i + 1) * dataCount / threadCount;
     std::thread threadi([&] {
       // Thread lambda for the global sum
       int startIndex = i * dataCount / threadCount;
@@ -146,29 +136,4 @@ HistogramComputation::treeSumHistogram() {
   }
 
   return std::make_tuple(treeSumBinMaxes, treeSumBinCounts);
-}
-
-void HistogramComputation::globalSumThread(int threadIndex) {
-  int startIndex = threadIndex * dataCount / threadCount;
-  int nextStartIndex = (threadIndex + 1) * dataCount / threadCount;
-
-  std::vector<int> localBinCounts(binCount, 0);
-
-  // Bin data
-  for (int j = startIndex; j < nextStartIndex; j++) {
-    float dataPoint = data[j];
-    for (int k = 0; k < treeSumBinMaxes.size(); k++) {
-      if (dataPoint < treeSumBinMaxes[k]) {
-        // Update local bin
-        localBinCounts[k]++;
-        break;
-      }
-    }
-  }
-
-  // Merge with global bins
-  std::lock_guard<std::mutex> binCountLock(treeSumBinCountMutex);
-  for (int j = 0; j < binCount; j++) {
-    treeSumBinCounts[j] += localBinCounts[j];
-  }
 }

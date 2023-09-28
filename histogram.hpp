@@ -28,5 +28,4 @@ public:
 private:
   std::tuple<std::vector<float>, std::vector<int>> treeSumHistogram();
   std::tuple<std::vector<float>, std::vector<int>> globalSumHistogram();
-  void globalSumThread(int threadIndex);
 };
