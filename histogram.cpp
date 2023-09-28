@@ -50,9 +50,7 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
 // Logic for computing histogram with the global sum
 std::tuple<std::vector<float>, std::vector<int>>
 HistogramComputation::globalSumHistogram() {
-  for (int i = 1; i <= binCount; i++) {
-    globalSumBinMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
-  }
+
   // Define threadCount threads which takes dataCount/threadCount data
   // (startIndex = i * dataCount/threadCount, nextStartIndex = (i+1) *
   // dataCount/threadCount)
@@ -84,14 +82,14 @@ HistogramComputation::globalSumHistogram() {
         globalSumBinCounts[j] += localBinCounts[j];
       }
     });
-    // std::thread threadi(globalSumThread, i);
-    threadVector.push_back(threadi);
+    threadVector.push_back(std::move(threadi));
   }
 
   for (auto &thread : threadVector) {
     thread.join();
   }
-
+  std::tuple<std::vector<float>, std::vector<int>> returnVal =
+      std::make_tuple(globalSumBinMaxes, globalSumBinCounts);
   return std::make_tuple(globalSumBinMaxes, globalSumBinCounts);
 }
 
@@ -128,7 +126,7 @@ HistogramComputation::treeSumHistogram() {
         treeSumBinCounts[j] += localBinCounts[j];
       }
     });
-    threadVector.push_back(threadi);
+    threadVector.push_back(std::move(threadi));
   }
 
   for (auto &thread : threadVector) {
