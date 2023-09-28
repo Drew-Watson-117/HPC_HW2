@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\drewz\School_Stuff\Fall_2023\High_Performance_Computing\Homework\HW2\histogram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\drewz\School_Stuff\Fall_2023\High_Performance_Computing\Homework\HW2\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\drewz\School_Stuff\Fall_2023\High_Performance_Computing\Homework\HW2\histogram.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\drewz\School_Stuff\Fall_2023\High_Performance_Computing\Homework\HW2\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{812B7B4C-DC2C-35FC-85CE-104C99A66365}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0D6DA691-65D0-3BB0-B70F-E50C3E3E5D35}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
