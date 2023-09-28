@@ -1,4 +1,0 @@
-C:/Users/drewz/School_Stuff/Fall_2023/High_Performance_Computing/Homework/HW2/build/CMakeFiles/histogram.dir
-C:/Users/drewz/School_Stuff/Fall_2023/High_Performance_Computing/Homework/HW2/build/CMakeFiles/ClangFormat.dir
-C:/Users/drewz/School_Stuff/Fall_2023/High_Performance_Computing/Homework/HW2/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/drewz/School_Stuff/Fall_2023/High_Performance_Computing/Homework/HW2/build/CMakeFiles/ZERO_CHECK.dir

@@ -1,24 +1,29 @@
 #include "histogram.hpp"
+#include <iostream>
+
 
 int main(int argc, char const* argv[])
 {
-    int threadCount = (int)(argv[0]);
-    int binCount = (int)(argv[1]);
-    float minMeas = atof(argv[2]);
-    float maxMeas = atof(argv[3]);
-    long dataCount = (long)(argv[4]);
-
-    srand(100);
-    std::vector<float> data;
-
-    // Load vector with random float values
-    for (int i = 0; i < dataCount; i++)
+    if (argc == 6)
     {
-        float randomFloat = (maxMeas-minMeas) * (float)(rand()) / (float)(RAND_MAX) + minMeas; //Guarantees randomFloat to be in [minMeas,maxMeas]
-        data.push_back(randomFloat);
-    }
+        int threadCount = atoi(argv[1]);
+        int binCount = atoi(argv[2]);
+        float minMeas = atof(argv[3]);
+        float maxMeas = atof(argv[4]);
+        int dataCount = atoi(argv[5]);
 
-    HistogramComputation computeHistograms(threadCount, binCount, minMeas, maxMeas, data);
+        srand(100);
+        std::vector<float> data;
+
+        // Load vector with random float values
+        for (int i = 0; i < dataCount; i++)
+        {
+            float randomFloat = (maxMeas - minMeas) * (float)(rand()) / (float)(RAND_MAX)+minMeas; //Guarantees randomFloat to be in [minMeas,maxMeas]
+            data.push_back(randomFloat);
+        }
+
+        HistogramComputation computeHistograms(threadCount, binCount, minMeas, maxMeas, data);
+    }
 
     return 0;
 }
