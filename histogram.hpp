@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
 #include <tuple>
@@ -34,12 +35,29 @@ private:
   std::tuple<std::vector<float>, std::vector<int>> serialHistogram();
 };
 
+// Barrier Class from Stack Overflow
+// https://stackoverflow.com/questions/48712881/how-can-i-create-a-barrier-in-c
 class Barrier {
 public:
-  Barrier();
-  void block(int threadCount);
+  explicit Barrier(int iCount)
+      : mThreshold(iCount), mCount(iCount), mGeneration(0) {}
+
+  void block() {
+    std::unique_lock<std::mutex> lLock{mMutex};
+    auto lGen = mGeneration;
+    if (!--mCount) {
+      mGeneration++;
+      mCount = mThreshold;
+      mCond.notify_all();
+    } else {
+      mCond.wait(lLock, [this, lGen] { return lGen != mGeneration; });
+    }
+  }
 
 private:
-  int threadsAtBarrier;
-  std::mutex mutex;
+  std::mutex mMutex;
+  std::condition_variable mCond;
+  std::size_t mThreshold;
+  int mCount;
+  std::size_t mGeneration;
 };

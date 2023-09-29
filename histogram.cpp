@@ -6,19 +6,6 @@
 // Constructor computes histogram with global sum and tree sum and outputs
 // results
 
-Barrier::Barrier() : threadsAtBarrier(0) {}
-void Barrier::block(int threadCount) {
-  mutex.lock();
-  threadsAtBarrier++;
-  mutex.unlock();
-  while (threadsAtBarrier < threadCount) {
-    // Do nothing
-  }
-  mutex.lock();
-  threadsAtBarrier = 0;
-  mutex.unlock();
-}
-
 HistogramComputation::HistogramComputation(int threadCount, int binCount,
                                            float minMeas, float maxMeas,
                                            std::vector<float> data)
@@ -54,7 +41,7 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
   for (int count : std::get<1>(globalOutput)) {
     std::cout << count << ", ";
   }
-  std::cout << std::endl;
+  std::cout << std::endl << std::endl;
 
   std::cout << "Tree Sum Histogram:" << std::endl << "bin_maxes: ";
   for (float max : std::get<0>(treeOutput)) {
@@ -64,7 +51,7 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
   for (int count : std::get<1>(treeOutput)) {
     std::cout << count << ", ";
   }
-  std::cout << std::endl;
+  std::cout << std::endl << std::endl;
 
   std::cout << "Serial Histogram:" << std::endl << "bin_maxes: ";
   for (float max : std::get<0>(serialOutput)) {
@@ -74,7 +61,7 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
   for (int count : std::get<1>(serialOutput)) {
     std::cout << count << ", ";
   }
-  std::cout << std::endl;
+  std::cout << std::endl << std::endl;
 }
 
 // Logic for computing histogram with the global sum
@@ -129,7 +116,7 @@ HistogramComputation::treeSumHistogram() {
   // Define threadCount threads which takes dataCount/threadCount data
 
   std::vector<std::thread> threadVector;
-  Barrier barrier;
+  Barrier barrier(threadCount);
 
   for (int i = 0; i < threadCount; i++) {
     std::thread threadi([&, i] {
@@ -149,6 +136,8 @@ HistogramComputation::treeSumHistogram() {
           }
         }
       }
+      // Barrier until all threads are done with local sum
+      barrier.block();
 
       // Merge with global bins
       int combineNeighbor = 2;
@@ -163,7 +152,7 @@ HistogramComputation::treeSumHistogram() {
           }
           combined = true;
         }
-        barrier.block(threadCount);
+        barrier.block();
         combineNeighbor *= 2;
       }
     });
