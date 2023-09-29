@@ -20,6 +20,7 @@ int main(int argc, char const* argv[])
         {
             float randomFloat = (maxMeas - minMeas) * (float)(rand()) / (float)(RAND_MAX)+minMeas; //Guarantees randomFloat to be in [minMeas,maxMeas]
             data.push_back(randomFloat);
+            std::cout << randomFloat << ", ";
         }
 
         HistogramComputation computeHistograms(threadCount, binCount, minMeas, maxMeas, data);

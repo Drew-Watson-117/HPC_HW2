@@ -34,7 +34,6 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
   // "Global" tree sum variables
   for (int i = 1; i <= binCount; i++) {
     treeSumBinMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
-    treeSumBinCounts.push_back(0);
   }
   for (int i = 0; i < threadCount; ++i) {
     treeSumLocalBins.push_back({});
@@ -45,6 +44,7 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
 
   globalOutput = globalSumHistogram();
   treeOutput = treeSumHistogram();
+  serialOutput = serialHistogram();
 
   std::cout << "Global Sum Histogram:" << std::endl << "bin_maxes: ";
   for (float max : std::get<0>(globalOutput)) {
@@ -60,8 +60,18 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
   for (float max : std::get<0>(treeOutput)) {
     std::cout << max << ", ";
   }
-  std::cout << std::endl << "bin_counts";
+  std::cout << std::endl << "bin_counts: ";
   for (int count : std::get<1>(treeOutput)) {
+    std::cout << count << ", ";
+  }
+  std::cout << std::endl;
+
+  std::cout << "Serial Histogram:" << std::endl << "bin_maxes: ";
+  for (float max : std::get<0>(serialOutput)) {
+    std::cout << max << ", ";
+  }
+  std::cout << std::endl << "bin_counts: ";
+  for (int count : std::get<1>(serialOutput)) {
     std::cout << count << ", ";
   }
   std::cout << std::endl;
@@ -88,7 +98,7 @@ HistogramComputation::globalSumHistogram() {
       for (int j = startIndex; j < nextStartIndex; j++) {
         float dataPoint = data[j];
         for (int k = 0; k < globalSumBinMaxes.size(); k++) {
-          if (dataPoint < globalSumBinMaxes[k]) {
+          if (dataPoint <= globalSumBinMaxes[k]) {
             // Update local bin
             localBinCounts[k]++;
             break;
@@ -132,7 +142,7 @@ HistogramComputation::treeSumHistogram() {
       for (int j = startIndex; j < nextStartIndex; j++) {
         float dataPoint = data[j];
         for (int k = 0; k < treeSumBinMaxes.size(); k++) {
-          if (dataPoint < treeSumBinMaxes[k]) {
+          if (dataPoint <= treeSumBinMaxes[k]) {
             // Update local bin
             treeSumLocalBins[threadIndex][k]++;
             break;
@@ -142,14 +152,16 @@ HistogramComputation::treeSumHistogram() {
 
       // Merge with global bins
       int combineNeighbor = 2;
+      bool combined = false;
       for (int layer = 0; layer < std::log2(threadCount); ++layer) {
-        if (threadIndex % combineNeighbor != 0) {
+        if (threadIndex % combineNeighbor != 0 && combined == false) {
           // Combine it with the neighbor
           for (size_t l = 0; l < binCount; l++) {
             size_t threadToCombineTo = threadIndex - (combineNeighbor / 2);
             treeSumLocalBins[threadToCombineTo][l] +=
                 treeSumLocalBins[threadIndex][l];
           }
+          combined = true;
         }
         barrier.block(threadCount);
         combineNeighbor *= 2;
@@ -162,5 +174,25 @@ HistogramComputation::treeSumHistogram() {
     thread.join();
   }
 
-  return std::make_tuple(treeSumBinMaxes, treeSumBinCounts);
+  return std::make_tuple(treeSumBinMaxes, treeSumLocalBins[0]);
+}
+
+std::tuple<std::vector<float>, std::vector<int>>
+HistogramComputation::serialHistogram() {
+  std::vector<float> binMaxes;
+  std::vector<int> binCounts;
+  for (int i = 1; i <= binCount; i++) {
+    binMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
+    binCounts.push_back(0);
+  }
+  for (float dataPoint : data) {
+    // bin
+    for (int i = 0; i < binCount; i++) {
+      if (dataPoint <= binMaxes[i]) {
+        binCounts[i]++;
+        break;
+      }
+    }
+  }
+  return std::make_tuple(binMaxes, binCounts);
 }
