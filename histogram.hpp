@@ -18,13 +18,15 @@ public:
   float maxMeas;
   std::vector<float> data;
   int dataCount;
-  // Global global sum variables
+  // global sum variables
   std::vector<float> globalSumBinMaxes;
   std::vector<int> globalSumBinCounts;
   std::mutex globalSumBinCountMutex;
-  // Global tree sum variables
+  // tree sum variables
   std::vector<float> treeSumBinMaxes;
-  std::vector<std::vector<int>> treeSumLocalBins;
+  std::vector<std::vector<int>>
+      treeSumLocalBins; // Each vector in treeSumLocalBins is the local bin
+                        // counts for a thread
 
   HistogramComputation(int threadCount, const int binCount, float minMeas,
                        float maxMeas, std::vector<float> data);

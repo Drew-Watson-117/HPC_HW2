@@ -3,8 +3,8 @@
 #include <cmath>
 #include <iostream>
 
-// Constructor computes histogram with global sum and tree sum and outputs
-// results
+// Constructor computes histogram with global sum, tree sum, and serial and
+// outputs results
 
 HistogramComputation::HistogramComputation(int threadCount, int binCount,
                                            float minMeas, float maxMeas,
@@ -12,13 +12,13 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
     : threadCount(threadCount), binCount(binCount), minMeas(minMeas),
       maxMeas(maxMeas), data(data), dataCount(data.size()) {
 
-  // "Global" global sum variables
+  // Instantiate global sum variables
   for (int i = 1; i <= binCount; i++) {
     globalSumBinMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
     globalSumBinCounts.push_back(0);
   }
 
-  // "Global" tree sum variables
+  // Instantiate tree sum variables
   for (int i = 1; i <= binCount; i++) {
     treeSumBinMaxes.push_back(minMeas + i * (maxMeas - minMeas) / binCount);
   }
@@ -29,10 +29,12 @@ HistogramComputation::HistogramComputation(int threadCount, int binCount,
     }
   }
 
+  // Run histogram calculations
   globalOutput = globalSumHistogram();
   treeOutput = treeSumHistogram();
   serialOutput = serialHistogram();
 
+  // PRINT OUTPUT
   std::cout << "Global Sum Histogram:" << std::endl << "bin_maxes: ";
   for (float max : std::get<0>(globalOutput)) {
     std::cout << max << ", ";
@@ -113,11 +115,11 @@ HistogramComputation::globalSumHistogram() {
 // Logic for computing histogram with the tree sum
 std::tuple<std::vector<float>, std::vector<int>>
 HistogramComputation::treeSumHistogram() {
-  // Define threadCount threads which takes dataCount/threadCount data
 
   std::vector<std::thread> threadVector;
   Barrier barrier(threadCount);
 
+  // Define threadCount threads which takes dataCount/threadCount data
   for (int i = 0; i < threadCount; i++) {
     std::thread threadi([&, i] {
       // Thread lambda for the global sum
@@ -139,10 +141,11 @@ HistogramComputation::treeSumHistogram() {
       // Barrier until all threads are done with local sum
       barrier.block();
 
-      // Merge with global bins
+      // Merge local bins with another thread
       int combineNeighbor = 2;
       bool combined = false;
-      for (int layer = 0; layer < std::log2(threadCount); ++layer) {
+      for (int layer = 0; layer < std::log2(threadCount);
+           ++layer) { // n threads => log2(n) combination iterations
         if (threadIndex % combineNeighbor != 0 && combined == false) {
           // Combine it with the neighbor
           for (size_t l = 0; l < binCount; l++) {
@@ -152,6 +155,7 @@ HistogramComputation::treeSumHistogram() {
           }
           combined = true;
         }
+        // Barrier blocks until all threads are done combining on a given layer
         barrier.block();
         combineNeighbor *= 2;
       }
@@ -166,6 +170,7 @@ HistogramComputation::treeSumHistogram() {
   return std::make_tuple(treeSumBinMaxes, treeSumLocalBins[0]);
 }
 
+// Serial histogram calculation to test the other two against
 std::tuple<std::vector<float>, std::vector<int>>
 HistogramComputation::serialHistogram() {
   std::vector<float> binMaxes;
