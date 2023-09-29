@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <mutex>
 #include <thread>
 #include <tuple>
@@ -21,7 +22,7 @@ public:
   // Global tree sum variables
   std::vector<float> treeSumBinMaxes;
   std::vector<int> treeSumBinCounts;
-  std::mutex treeSumBinCountMutex;
+  std::vector<std::vector<int>> treeSumLocalBins;
 
   HistogramComputation(int threadCount, const int binCount, float minMeas,
                        float maxMeas, std::vector<float> data);
@@ -29,4 +30,14 @@ public:
 private:
   std::tuple<std::vector<float>, std::vector<int>> treeSumHistogram();
   std::tuple<std::vector<float>, std::vector<int>> globalSumHistogram();
+};
+
+class Barrier {
+public:
+  Barrier();
+  void block(int threadCount);
+
+private:
+  int threadsAtBarrier;
+  std::mutex mutex;
 };
